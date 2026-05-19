@@ -9,7 +9,6 @@ description = "Critique-loop executor (adversarial and reflexion topologies)"
 requires-python = ">=3.11"
 dependencies = [
   "pydantic>=2.7",
-  "anthropic>=0.30",
   "orjson>=3.9",
   "rxp @ git+https://github.com/ProtocolWarden/RxP.git",
   "cxrp @ git+https://github.com/ProtocolWarden/CxRP.git@v0.3.0",

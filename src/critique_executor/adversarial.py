@@ -11,9 +11,8 @@ from critique_executor.trace import CritiqueTraceBuilder
 class AdversarialLoop:
     """Proposer + critic loop. Neither sees the other's system prompt."""
 
-    def __init__(self, config: CritiqueConfig, anthropic_client: object) -> None:
+    def __init__(self, config: CritiqueConfig) -> None:
         self._config = config
-        self._client = anthropic_client
 
     def run(self, goal_text: str) -> CritiqueTrace:
         builder = CritiqueTraceBuilder(CritiqueTopology.ADVERSARIAL, goal_text)
@@ -32,7 +31,6 @@ class AdversarialLoop:
             )
 
             if not success:
-                # Agent failure counts as a reject round so the trace is complete
                 from critique_executor.models import CritiqueVerdict
                 verdict = CritiqueVerdict(
                     status=VerdictStatus.REJECT,
@@ -49,8 +47,10 @@ class AdversarialLoop:
                 criteria=cfg.criteria,
                 critic_model=cfg.critic_model,
                 critic_system_prompt=cfg.critic_system_prompt,
-                anthropic_client=self._client,
                 round_num=round_num,
+                working_dir=cfg.working_dir,
+                timeout_seconds=cfg.timeout_seconds,
+                backend=cfg.worker_backend,  # type: ignore[arg-type]
             )
             builder.add_round(proposal, verdict)
 

@@ -2,8 +2,8 @@
 # Copyright (C) 2026 ProtocolWarden
 from __future__ import annotations
 
-import os
 from datetime import datetime, timezone
+from typing import Literal
 
 from critique_executor.adversarial import AdversarialLoop
 from critique_executor.models import CritiqueConfig, CritiqueTopology
@@ -19,18 +19,21 @@ class CritiqueExecutorRunner:
         self,
         topology: str,
         config: CritiqueConfig | None = None,
-        api_key: str | None = None,
+        worker_backend: Literal["claude_code", "codex_cli"] = "claude_code",
+        working_dir: str = ".",
     ) -> None:
         self._topology = CritiqueTopology(topology)
-        resolved_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
-
-        import anthropic
-        self._client = anthropic.Anthropic(api_key=resolved_key)
+        self._worker_backend = worker_backend
+        self._working_dir = working_dir
 
         if config is not None:
             self._config = config
         else:
-            self._config = CritiqueConfig(topology=self._topology)
+            self._config = CritiqueConfig(
+                topology=self._topology,
+                working_dir=working_dir,
+                worker_backend=worker_backend,
+            )
 
     def run(
         self,
@@ -51,9 +54,9 @@ class CritiqueExecutorRunner:
 
         try:
             if self._topology == CritiqueTopology.ADVERSARIAL:
-                loop = AdversarialLoop(self._config, self._client)
+                loop = AdversarialLoop(self._config)
             else:
-                loop = ReflexionLoop(self._config, self._client)
+                loop = ReflexionLoop(self._config)
 
             trace = loop.run(goal_text)
             finished_at = _now_iso()

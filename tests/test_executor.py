@@ -40,7 +40,7 @@ def test_routes_to_adversarial():
         mock_loop.run.return_value = _make_accepted_trace(CritiqueTopology.ADVERSARIAL)
         mock_loop_cls.return_value = mock_loop
 
-        runner = CritiqueExecutorRunner("adversarial", api_key="test-key")
+        runner = CritiqueExecutorRunner("adversarial")
         result = runner.run("do something")
 
     mock_loop_cls.assert_called_once()
@@ -54,7 +54,7 @@ def test_routes_to_reflexion():
         mock_loop.run.return_value = _make_accepted_trace(CritiqueTopology.REFLEXION)
         mock_loop_cls.return_value = mock_loop
 
-        runner = CritiqueExecutorRunner("reflexion", api_key="test-key")
+        runner = CritiqueExecutorRunner("reflexion")
         result = runner.run("do something")
 
     mock_loop_cls.assert_called_once()
@@ -67,7 +67,7 @@ def test_returns_runtime_result_with_metadata():
         mock_loop.run.return_value = _make_accepted_trace(CritiqueTopology.ADVERSARIAL)
         mock_loop_cls.return_value = mock_loop
 
-        runner = CritiqueExecutorRunner("adversarial", api_key="test-key")
+        runner = CritiqueExecutorRunner("adversarial")
         result = runner.run("goal")
 
     assert result.runtime_name == "critique_executor"
@@ -83,7 +83,7 @@ def test_rejected_returns_rejected_status():
         mock_loop.run.return_value = _make_rejected_trace(CritiqueTopology.ADVERSARIAL)
         mock_loop_cls.return_value = mock_loop
 
-        runner = CritiqueExecutorRunner("adversarial", api_key="test-key")
+        runner = CritiqueExecutorRunner("adversarial")
         result = runner.run("goal")
 
     assert result.status == "rejected"
@@ -96,7 +96,7 @@ def test_exception_returns_failed_status():
         mock_loop.run.side_effect = RuntimeError("something broke")
         mock_loop_cls.return_value = mock_loop
 
-        runner = CritiqueExecutorRunner("adversarial", api_key="test-key")
+        runner = CritiqueExecutorRunner("adversarial")
         result = runner.run("goal")
 
     assert result.status == "failed"
@@ -110,7 +110,7 @@ def test_max_rounds_override():
         mock_loop.run.return_value = _make_accepted_trace(CritiqueTopology.ADVERSARIAL)
         mock_loop_cls.return_value = mock_loop
 
-        runner = CritiqueExecutorRunner("adversarial", api_key="test-key")
+        runner = CritiqueExecutorRunner("adversarial")
         runner.run("goal", max_rounds=3)
 
     assert runner._config.max_rounds == 3
@@ -122,7 +122,17 @@ def test_criteria_override():
         mock_loop.run.return_value = _make_accepted_trace(CritiqueTopology.REFLEXION)
         mock_loop_cls.return_value = mock_loop
 
-        runner = CritiqueExecutorRunner("reflexion", api_key="test-key")
+        runner = CritiqueExecutorRunner("reflexion")
         runner.run("goal", criteria=["be concise"])
 
     assert runner._config.criteria == ["be concise"]
+
+
+def test_worker_backend_set_on_config():
+    runner = CritiqueExecutorRunner("adversarial", worker_backend="codex_cli")
+    assert runner._config.worker_backend == "codex_cli"
+
+
+def test_working_dir_set_on_config():
+    runner = CritiqueExecutorRunner("reflexion", working_dir="/some/path")
+    assert runner._config.working_dir == "/some/path"

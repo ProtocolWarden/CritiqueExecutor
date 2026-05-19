@@ -11,9 +11,8 @@ from critique_executor.trace import CritiqueTraceBuilder
 class ReflexionLoop:
     """Single agent + independent critic (fresh context each critique)."""
 
-    def __init__(self, config: CritiqueConfig, anthropic_client: object) -> None:
+    def __init__(self, config: CritiqueConfig) -> None:
         self._config = config
-        self._client = anthropic_client
 
     def run(self, goal_text: str) -> CritiqueTrace:
         builder = CritiqueTraceBuilder(CritiqueTopology.REFLEXION, goal_text)
@@ -49,8 +48,10 @@ class ReflexionLoop:
                 criteria=cfg.criteria,
                 critic_model=cfg.critic_model,
                 critic_system_prompt=cfg.critic_system_prompt,
-                anthropic_client=self._client,
                 round_num=round_num,
+                working_dir=cfg.working_dir,
+                timeout_seconds=cfg.timeout_seconds,
+                backend=cfg.worker_backend,  # type: ignore[arg-type]
             )
             builder.add_round(proposal, verdict)
 
