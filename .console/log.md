@@ -4,6 +4,15 @@ _Recent decisions, stop points, what changed and why._
 
 ---
 
+## 2026-05-19 — ADR 0006 Phase 2: wire safe_run() in critic_runner.py
+
+- Replaced subprocess.run() in _claude_critic() and _codex_critic() with core_runner.process.safe_run().
+- Removed subprocess import; timed_out check replaces TimeoutExpired catch.
+- FileNotFoundError still caught at call site (safe_run lets it propagate from Popen).
+- Added core-runner dep to pyproject.toml; conftest.py adds ExecutorRuntime/src to sys.path.
+- Added RuntimeInvocation + ArtifactDescriptor to rxp.contracts stub (needed by core_runner __init__).
+- 40 tests pass.
+
 ## 2026-05-18 — Initial build
 
 Built complete CritiqueExecutor package from scratch (Phase 3).

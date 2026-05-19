@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import json
-import subprocess
 from typing import Literal
+
+from core_runner.process import safe_run
 
 from critique_executor.models import CritiqueVerdict
 from critique_executor.verdict import parse_verdict
@@ -76,23 +77,17 @@ def _claude_critic(
         cmd += ["--append-system-prompt", system_prompt]
 
     try:
-        result = subprocess.run(
-            cmd,
-            cwd=working_dir,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
-        )
-        raw = result.stdout or result.stderr
-        try:
-            data = json.loads(raw)
-            return data.get("result", raw)
-        except (json.JSONDecodeError, AttributeError):
-            return raw
-    except subprocess.TimeoutExpired:
-        return '{"status": "reject", "reason": "critic timed out"}'
+        result = safe_run(cmd, cwd=working_dir, timeout_seconds=timeout_seconds)
     except FileNotFoundError:
         return '{"status": "reject", "reason": "claude CLI not found"}'
+    if result.timed_out:
+        return '{"status": "reject", "reason": "critic timed out"}'
+    raw = result.stdout or result.stderr
+    try:
+        data = json.loads(raw)
+        return data.get("result", raw)
+    except (json.JSONDecodeError, AttributeError):
+        return raw
 
 
 def _codex_critic(
@@ -103,15 +98,9 @@ def _codex_critic(
 ) -> str:
     cmd = ["codex", "--model", model, "--approval-mode", "full-auto", "-q", prompt]
     try:
-        result = subprocess.run(
-            cmd,
-            cwd=working_dir,
-            capture_output=True,
-            text=True,
-            timeout=timeout_seconds,
-        )
-        return result.stdout or result.stderr
-    except subprocess.TimeoutExpired:
-        return '{"status": "reject", "reason": "critic timed out"}'
+        result = safe_run(cmd, cwd=working_dir, timeout_seconds=timeout_seconds)
     except FileNotFoundError:
         return '{"status": "reject", "reason": "codex CLI not found"}'
+    if result.timed_out:
+        return '{"status": "reject", "reason": "critic timed out"}'
+    return result.stdout or result.stderr
