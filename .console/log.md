@@ -4,6 +4,10 @@ _Recent decisions, stop points, what changed and why._
 
 ---
 
+## 2026-05-19 — Add __pycache__ / *.pyc to .gitignore; untrack bytecode
+
+Bytecode was accidentally tracked. Added to .gitignore and removed from index.
+
 ## 2026-05-19 — ADR 0006 Phase 2: wire safe_run() in critic_runner.py
 
 - Replaced subprocess.run() in _claude_critic() and _codex_critic() with core_runner.process.safe_run().

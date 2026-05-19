@@ -1,1 +1,4 @@
 .console/.context
+__pycache__/
+*.pyc
+*.pyo
