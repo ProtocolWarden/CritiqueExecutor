@@ -62,6 +62,7 @@ class CritiqueConfig:
     critic_system_prompt: str = ""
     working_dir: str = "."
     timeout_seconds: int = 3600
+    worker_backend: str = "claude_code"
 
     def __post_init__(self) -> None:
         if self.max_rounds > 10:

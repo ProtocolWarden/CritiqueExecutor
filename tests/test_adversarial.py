@@ -2,11 +2,10 @@
 # Copyright (C) 2026 ProtocolWarden
 from __future__ import annotations
 
-import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from critique_executor.adversarial import AdversarialLoop
-from critique_executor.models import CritiqueConfig, CritiqueTopology, VerdictStatus
+from critique_executor.models import CritiqueConfig, CritiqueTopology, CritiqueVerdict, VerdictStatus
 
 
 def _make_config(**kwargs) -> CritiqueConfig:
@@ -15,25 +14,21 @@ def _make_config(**kwargs) -> CritiqueConfig:
     return CritiqueConfig(**defaults)
 
 
-def _accept_response() -> MagicMock:
-    msg = MagicMock()
-    msg.content[0].text = json.dumps({"status": "accept", "reason": "good"})
-    return msg
+def _accept_verdict(round_num: int = 1) -> CritiqueVerdict:
+    return CritiqueVerdict(status=VerdictStatus.ACCEPT, reason="good", round=round_num)
 
 
-def _reject_response(reason: str = "not good") -> MagicMock:
-    msg = MagicMock()
-    msg.content[0].text = json.dumps({"status": "reject", "reason": reason})
-    return msg
+def _reject_verdict(reason: str = "not good", round_num: int = 1) -> CritiqueVerdict:
+    return CritiqueVerdict(status=VerdictStatus.REJECT, reason=reason, round=round_num)
 
 
 def test_accept_on_round_1():
-    client = MagicMock()
-    client.messages.create.return_value = _accept_response()
     config = _make_config()
-
-    with patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal text")):
-        loop = AdversarialLoop(config, client)
+    with (
+        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal text")),
+        patch("critique_executor.adversarial.run_critic", return_value=_accept_verdict(1)),
+    ):
+        loop = AdversarialLoop(config)
         trace = loop.run("do something")
 
     assert trace.accepted is True
@@ -43,12 +38,15 @@ def test_accept_on_round_1():
 
 
 def test_reject_then_accept():
-    client = MagicMock()
-    client.messages.create.side_effect = [_reject_response("too short"), _accept_response()]
     config = _make_config()
-
-    with patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")):
-        loop = AdversarialLoop(config, client)
+    with (
+        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")),
+        patch(
+            "critique_executor.adversarial.run_critic",
+            side_effect=[_reject_verdict("too short", 1), _accept_verdict(2)],
+        ),
+    ):
+        loop = AdversarialLoop(config)
         trace = loop.run("goal")
 
     assert trace.accepted is True
@@ -58,12 +56,15 @@ def test_reject_then_accept():
 
 
 def test_max_rounds_exceeded_not_accepted():
-    client = MagicMock()
-    client.messages.create.return_value = _reject_response("always wrong")
     config = _make_config(max_rounds=3)
-
-    with patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")):
-        loop = AdversarialLoop(config, client)
+    with (
+        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")),
+        patch(
+            "critique_executor.adversarial.run_critic",
+            side_effect=[_reject_verdict(round_num=i) for i in range(1, 4)],
+        ),
+    ):
+        loop = AdversarialLoop(config)
         trace = loop.run("goal")
 
     assert trace.accepted is False
@@ -72,16 +73,19 @@ def test_max_rounds_exceeded_not_accepted():
 
 
 def test_trace_has_all_rounds():
-    client = MagicMock()
-    client.messages.create.side_effect = [
-        _reject_response("r1"),
-        _reject_response("r2"),
-        _accept_response(),
-    ]
     config = _make_config(max_rounds=5)
-
-    with patch("critique_executor.adversarial.run_agent", return_value=(True, "p")):
-        loop = AdversarialLoop(config, client)
+    with (
+        patch("critique_executor.adversarial.run_agent", return_value=(True, "p")),
+        patch(
+            "critique_executor.adversarial.run_critic",
+            side_effect=[
+                _reject_verdict("r1", 1),
+                _reject_verdict("r2", 2),
+                _accept_verdict(3),
+            ],
+        ),
+    ):
+        loop = AdversarialLoop(config)
         trace = loop.run("goal")
 
     assert len(trace.rounds) == 3
@@ -89,18 +93,52 @@ def test_trace_has_all_rounds():
 
 
 def test_rejection_reason_passed_to_next_agent_call():
-    client = MagicMock()
-    client.messages.create.side_effect = [_reject_response("needs more detail"), _accept_response()]
     config = _make_config()
+    calls: list = []
 
-    calls = []
     def fake_agent(goal_text, working_dir, system_prompt="", rejection_reason=None, timeout_seconds=3600):
         calls.append(rejection_reason)
         return (True, "proposal")
 
-    with patch("critique_executor.adversarial.run_agent", side_effect=fake_agent):
-        loop = AdversarialLoop(config, client)
+    with (
+        patch("critique_executor.adversarial.run_agent", side_effect=fake_agent),
+        patch(
+            "critique_executor.adversarial.run_critic",
+            side_effect=[_reject_verdict("needs more detail", 1), _accept_verdict(2)],
+        ),
+    ):
+        loop = AdversarialLoop(config)
         loop.run("goal")
 
     assert calls[0] is None
     assert calls[1] == "needs more detail"
+
+
+def test_run_critic_receives_worker_backend():
+    config = _make_config(worker_backend="codex_cli")
+    critic_calls: list = []
+
+    def fake_critic(**kwargs):
+        critic_calls.append(kwargs)
+        return _accept_verdict(1)
+
+    with (
+        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")),
+        patch("critique_executor.adversarial.run_critic", side_effect=fake_critic),
+    ):
+        loop = AdversarialLoop(config)
+        loop.run("goal")
+
+    assert critic_calls[0]["backend"] == "codex_cli"
+
+
+def test_agent_failure_counts_as_reject():
+    config = _make_config(max_rounds=2)
+    with (
+        patch("critique_executor.adversarial.run_agent", return_value=(False, "error msg")),
+    ):
+        loop = AdversarialLoop(config)
+        trace = loop.run("goal")
+
+    assert trace.accepted is False
+    assert all(r.verdict.status == VerdictStatus.REJECT for r in trace.rounds)
