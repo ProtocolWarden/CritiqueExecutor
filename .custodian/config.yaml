@@ -1,0 +1,14 @@
+repo_key: CritiqueExecutor
+src_root: src/critique_executor
+tests_root: tests
+
+audit:
+  cross_repo:
+    platform_manifest_repo: ../PlatformManifest
+
+tools:
+  ruff: true
+  vulture: true
+
+privacy:
+  require_boundary_artifact: true

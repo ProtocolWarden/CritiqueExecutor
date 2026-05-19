@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "critique-executor"
+version = "0.1.0"
+description = "Critique-loop executor (adversarial and reflexion topologies)"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.7",
+  "anthropic>=0.30",
+  "orjson>=3.9",
+  "rxp @ git+https://github.com/ProtocolWarden/RxP.git",
+  "cxrp @ git+https://github.com/ProtocolWarden/CxRP.git@v0.3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "ruff>=0.5",
+  "custodian @ git+https://github.com/ProtocolWarden/Custodian.git@main",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+markers = [
+  "integration: requires live external service",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
