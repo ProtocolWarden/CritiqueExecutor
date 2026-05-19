@@ -4,6 +4,13 @@ from __future__ import annotations
 
 import sys
 import types
+from pathlib import Path
+
+# core_runner lives as a sibling repo; add its src/ to path so tests run
+# without installing the package
+_core_runner_src = Path(__file__).parent.parent.parent / "ExecutorRuntime" / "src"
+if str(_core_runner_src) not in sys.path:
+    sys.path.insert(0, str(_core_runner_src))
 
 # ---------------------------------------------------------------------------
 # Stub rxp so tests can import executor without installing the package
@@ -19,6 +26,8 @@ class _RuntimeResult:
 
 
 _rxp_contracts.RuntimeResult = _RuntimeResult
+_rxp_contracts.RuntimeInvocation = type("RuntimeInvocation", (), {})
+_rxp_contracts.ArtifactDescriptor = type("ArtifactDescriptor", (), {})
 _rxp.contracts = _rxp_contracts
 sys.modules["rxp"] = _rxp
 sys.modules["rxp.contracts"] = _rxp_contracts
