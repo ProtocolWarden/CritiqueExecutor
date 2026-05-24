@@ -25,8 +25,8 @@ def _reject_verdict(reason: str = "not good", round_num: int = 1) -> CritiqueVer
 def test_accept_on_round_1():
     config = _make_config()
     with (
-        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal text")),
-        patch("critique_executor.adversarial.run_critic", return_value=_accept_verdict(1)),
+        patch("critique_executor._loop.run_agent", return_value=(True, "proposal text")),
+        patch("critique_executor._loop.run_critic", return_value=_accept_verdict(1)),
     ):
         loop = AdversarialLoop(config)
         trace = loop.run("do something")
@@ -40,9 +40,9 @@ def test_accept_on_round_1():
 def test_reject_then_accept():
     config = _make_config()
     with (
-        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")),
+        patch("critique_executor._loop.run_agent", return_value=(True, "proposal")),
         patch(
-            "critique_executor.adversarial.run_critic",
+            "critique_executor._loop.run_critic",
             side_effect=[_reject_verdict("too short", 1), _accept_verdict(2)],
         ),
     ):
@@ -58,9 +58,9 @@ def test_reject_then_accept():
 def test_max_rounds_exceeded_not_accepted():
     config = _make_config(max_rounds=3)
     with (
-        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")),
+        patch("critique_executor._loop.run_agent", return_value=(True, "proposal")),
         patch(
-            "critique_executor.adversarial.run_critic",
+            "critique_executor._loop.run_critic",
             side_effect=[_reject_verdict(round_num=i) for i in range(1, 4)],
         ),
     ):
@@ -75,9 +75,9 @@ def test_max_rounds_exceeded_not_accepted():
 def test_trace_has_all_rounds():
     config = _make_config(max_rounds=5)
     with (
-        patch("critique_executor.adversarial.run_agent", return_value=(True, "p")),
+        patch("critique_executor._loop.run_agent", return_value=(True, "p")),
         patch(
-            "critique_executor.adversarial.run_critic",
+            "critique_executor._loop.run_critic",
             side_effect=[
                 _reject_verdict("r1", 1),
                 _reject_verdict("r2", 2),
@@ -101,9 +101,9 @@ def test_rejection_reason_passed_to_next_agent_call():
         return (True, "proposal")
 
     with (
-        patch("critique_executor.adversarial.run_agent", side_effect=fake_agent),
+        patch("critique_executor._loop.run_agent", side_effect=fake_agent),
         patch(
-            "critique_executor.adversarial.run_critic",
+            "critique_executor._loop.run_critic",
             side_effect=[_reject_verdict("needs more detail", 1), _accept_verdict(2)],
         ),
     ):
@@ -123,8 +123,8 @@ def test_run_critic_receives_worker_backend():
         return _accept_verdict(1)
 
     with (
-        patch("critique_executor.adversarial.run_agent", return_value=(True, "proposal")),
-        patch("critique_executor.adversarial.run_critic", side_effect=fake_critic),
+        patch("critique_executor._loop.run_agent", return_value=(True, "proposal")),
+        patch("critique_executor._loop.run_critic", side_effect=fake_critic),
     ):
         loop = AdversarialLoop(config)
         loop.run("goal")
@@ -135,7 +135,7 @@ def test_run_critic_receives_worker_backend():
 def test_agent_failure_counts_as_reject():
     config = _make_config(max_rounds=2)
     with (
-        patch("critique_executor.adversarial.run_agent", return_value=(False, "error msg")),
+        patch("critique_executor._loop.run_agent", return_value=(False, "error msg")),
     ):
         loop = AdversarialLoop(config)
         trace = loop.run("goal")

@@ -25,8 +25,8 @@ def _reject_verdict(reason: str = "bad", round_num: int = 1) -> CritiqueVerdict:
 def test_accept_on_round_1():
     config = _make_config()
     with (
-        patch("critique_executor.reflexion.run_agent", return_value=(True, "output")),
-        patch("critique_executor.reflexion.run_critic", return_value=_accept_verdict(1)),
+        patch("critique_executor._loop.run_agent", return_value=(True, "output")),
+        patch("critique_executor._loop.run_critic", return_value=_accept_verdict(1)),
     ):
         loop = ReflexionLoop(config)
         trace = loop.run("goal")
@@ -38,9 +38,9 @@ def test_accept_on_round_1():
 def test_reject_twice_then_accept():
     config = _make_config()
     with (
-        patch("critique_executor.reflexion.run_agent", return_value=(True, "output")),
+        patch("critique_executor._loop.run_agent", return_value=(True, "output")),
         patch(
-            "critique_executor.reflexion.run_critic",
+            "critique_executor._loop.run_critic",
             side_effect=[_reject_verdict("r1", 1), _reject_verdict("r2", 2), _accept_verdict(3)],
         ),
     ):
@@ -62,8 +62,8 @@ def test_criteria_included_in_critic_call():
         return _accept_verdict(kwargs["round_num"])
 
     with (
-        patch("critique_executor.reflexion.run_agent", return_value=(True, "output")),
-        patch("critique_executor.reflexion.run_critic", side_effect=fake_critic),
+        patch("critique_executor._loop.run_agent", return_value=(True, "output")),
+        patch("critique_executor._loop.run_critic", side_effect=fake_critic),
     ):
         loop = ReflexionLoop(config)
         loop.run("goal")
@@ -80,9 +80,9 @@ def test_agent_receives_rejection_reason_only():
         return (True, "output")
 
     with (
-        patch("critique_executor.reflexion.run_agent", side_effect=fake_agent),
+        patch("critique_executor._loop.run_agent", side_effect=fake_agent),
         patch(
-            "critique_executor.reflexion.run_critic",
+            "critique_executor._loop.run_critic",
             side_effect=[_reject_verdict("fix x", 1), _accept_verdict(2)],
         ),
     ):
@@ -104,8 +104,8 @@ def test_critic_gets_fresh_round_nums():
         return CritiqueVerdict(status=status, reason="r", round=kwargs["round_num"])
 
     with (
-        patch("critique_executor.reflexion.run_agent", return_value=(True, "output")),
-        patch("critique_executor.reflexion.run_critic", side_effect=fake_critic),
+        patch("critique_executor._loop.run_agent", return_value=(True, "output")),
+        patch("critique_executor._loop.run_critic", side_effect=fake_critic),
     ):
         loop = ReflexionLoop(config)
         loop.run("goal")
@@ -122,8 +122,8 @@ def test_run_critic_receives_worker_backend():
         return _accept_verdict(1)
 
     with (
-        patch("critique_executor.reflexion.run_agent", return_value=(True, "output")),
-        patch("critique_executor.reflexion.run_critic", side_effect=fake_critic),
+        patch("critique_executor._loop.run_agent", return_value=(True, "output")),
+        patch("critique_executor._loop.run_critic", side_effect=fake_critic),
     ):
         loop = ReflexionLoop(config)
         loop.run("goal")
