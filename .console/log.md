@@ -1,5 +1,25 @@
 # Log
 
+## 2026-05-23 — Clear Custodian findings + add real unit tests
+
+Took CritiqueExecutor from 16 Custodian findings to 0 clean.
+
+- T1/T6/T7: wrote real unit tests under `tests/unit/` — `test_agent_runner.py`
+  (run_agent: command build, JSON parse, timeout/missing-CLI, rejection-reason
+  threading), `test_critic_runner.py` (run_critic: claude/codex backends,
+  prompt content, verdict parsing, fallbacks), and `test__loop.py` (shared
+  loop mechanics). subprocess/`safe_run` mocked; real behavior asserted.
+- D11: extracted the duplicated proposer→critic loop body from
+  adversarial.py/reflexion.py into `critique_executor._loop.run_critique_loop`;
+  topology classes now delegate. Existing loop tests repointed to patch
+  `_loop.run_agent`/`run_critic`.
+- S4: added venv guard to `tests/conftest.py` (CI-skipped).
+- W6: added `.hooks/pre-commit` (log.md enforcement).
+- W7: rewrote `.gitignore` to the `.console/*` + `CLAUDE.md` policy.
+- R3/R4/DC4: expanded README (what-it-is / is-not, quick start, architecture).
+- M1: added CHANGELOG.md.
+- Enabled `core.hooksPath .hooks`. 65 tests pass; audit clean.
+
 ## 2026-05-21 — Add closing fence to console-context block
 
 Added <!-- /console-context --> end marker so OperatorConsole only replaces its

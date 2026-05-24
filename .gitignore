@@ -1,4 +1,13 @@
-.console/.context
+.console/*
+!.console/task.md
+!.console/guidelines.md
+!.console/backlog.md
+!.console/log.md
+CLAUDE.md
+.custodian/tmp*.yaml
 __pycache__/
 *.pyc
 *.pyo
+.venv/
+.pytest_cache/
+*.egg-info/
