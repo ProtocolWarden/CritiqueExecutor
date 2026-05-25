@@ -75,7 +75,16 @@ def test_agent_receives_rejection_reason_only():
     config = _make_config()
     agent_calls: list = []
 
-    def fake_agent(goal_text, working_dir, system_prompt="", rejection_reason=None, timeout_seconds=3600):
+    def fake_agent(
+        goal_text,
+        working_dir,
+        model,
+        system_prompt="",
+        rejection_reason=None,
+        timeout_seconds=3600,
+        effort=None,
+        backend="claude_code",
+    ):
         agent_calls.append({"goal_text": goal_text, "rejection_reason": rejection_reason})
         return (True, "output")
 
@@ -114,7 +123,11 @@ def test_critic_gets_fresh_round_nums():
 
 
 def test_run_critic_receives_worker_backend():
-    config = _make_config(worker_backend="codex_cli")
+    config = _make_config(
+        worker_backend="codex_cli",
+        critic_backend_models={"codex_cli": "gpt-5.4-mini"},
+        critic_backend_efforts={"codex_cli": "low"},
+    )
     critic_calls: list = []
 
     def fake_critic(**kwargs):
@@ -129,3 +142,5 @@ def test_run_critic_receives_worker_backend():
         loop.run("goal")
 
     assert critic_calls[0]["backend"] == "codex_cli"
+    assert critic_calls[0]["critic_model"] == "gpt-5.4-mini"
+    assert critic_calls[0]["effort"] == "low"

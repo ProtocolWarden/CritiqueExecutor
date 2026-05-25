@@ -56,6 +56,12 @@ class CritiqueConfig:
     topology: CritiqueTopology
     proposer_model: str = "claude-sonnet-4-6"
     critic_model: str = "claude-sonnet-4-6"
+    proposer_effort: str | None = None
+    critic_effort: str | None = None
+    proposer_backend_models: dict[str, str] = field(default_factory=dict)
+    critic_backend_models: dict[str, str] = field(default_factory=dict)
+    proposer_backend_efforts: dict[str, str] = field(default_factory=dict)
+    critic_backend_efforts: dict[str, str] = field(default_factory=dict)
     max_rounds: int = 5
     criteria: list[str] = field(default_factory=list)
     proposer_system_prompt: str = ""
@@ -67,3 +73,15 @@ class CritiqueConfig:
     def __post_init__(self) -> None:
         if self.max_rounds > 10:
             self.max_rounds = 10
+
+    def proposer_model_for_backend(self, backend: str) -> str:
+        return self.proposer_backend_models.get(backend, self.proposer_model)
+
+    def critic_model_for_backend(self, backend: str) -> str:
+        return self.critic_backend_models.get(backend, self.critic_model)
+
+    def proposer_effort_for_backend(self, backend: str) -> str | None:
+        return self.proposer_backend_efforts.get(backend, self.proposer_effort)
+
+    def critic_effort_for_backend(self, backend: str) -> str | None:
+        return self.critic_backend_efforts.get(backend, self.critic_effort)

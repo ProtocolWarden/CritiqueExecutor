@@ -35,6 +35,7 @@ def run_critic(
     round_num: int,
     working_dir: str = ".",
     timeout_seconds: int = 3600,
+    effort: str | None = None,
     backend: Literal["claude_code", "codex_cli"] = "claude_code",
 ) -> CritiqueVerdict:
     """Ask critic to evaluate proposal via CLI subprocess. Returns CritiqueVerdict.
@@ -52,9 +53,11 @@ def run_critic(
     )
 
     if backend == "codex_cli":
-        response_text = _codex_critic(prompt, critic_model, working_dir, timeout_seconds)
+        response_text = _codex_critic(prompt, critic_model, working_dir, timeout_seconds, effort)
     else:
-        response_text = _claude_critic(prompt, critic_model, critic_system_prompt, working_dir, timeout_seconds)
+        response_text = _claude_critic(
+            prompt, critic_model, critic_system_prompt, working_dir, timeout_seconds, effort
+        )
 
     return parse_verdict(response_text, round_num)
 
@@ -65,6 +68,7 @@ def _claude_critic(
     system_prompt: str,
     working_dir: str,
     timeout_seconds: int,
+    effort: str | None,
 ) -> str:
     cmd = [
         "claude",
@@ -73,6 +77,8 @@ def _claude_critic(
         "--no-auto-commits",
         "--output-format", "json",
     ]
+    if effort:
+        cmd += ["--effort", effort]
     if system_prompt:
         cmd += ["--append-system-prompt", system_prompt]
 
@@ -95,8 +101,12 @@ def _codex_critic(
     model: str,
     working_dir: str,
     timeout_seconds: int,
+    effort: str | None,
 ) -> str:
-    cmd = ["codex", "--model", model, "--approval-mode", "full-auto", "-q", prompt]
+    cmd = ["codex", "--model", model, "--approval-mode", "full-auto"]
+    if effort:
+        cmd += ["-c", f'model_reasoning_effort="{effort}"']
+    cmd += ["-q", prompt]
     try:
         result = safe_run(cmd, cwd=working_dir, timeout_seconds=timeout_seconds)
     except FileNotFoundError:

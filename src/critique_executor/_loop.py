@@ -41,9 +41,12 @@ def run_critique_loop(
         success, proposal = run_agent(
             goal_text=goal_text,
             working_dir=cfg.working_dir,
+            model=cfg.proposer_model_for_backend(cfg.worker_backend),
             system_prompt=cfg.proposer_system_prompt,
             rejection_reason=last_rejection,
             timeout_seconds=cfg.timeout_seconds,
+            effort=cfg.proposer_effort_for_backend(cfg.worker_backend),
+            backend=cfg.worker_backend,  # type: ignore[arg-type]
         )
 
         if not success:
@@ -60,11 +63,12 @@ def run_critique_loop(
             proposal=proposal,
             goal_text=goal_text,
             criteria=cfg.criteria,
-            critic_model=cfg.critic_model,
+            critic_model=cfg.critic_model_for_backend(cfg.worker_backend),
             critic_system_prompt=cfg.critic_system_prompt,
             round_num=round_num,
             working_dir=cfg.working_dir,
             timeout_seconds=cfg.timeout_seconds,
+            effort=cfg.critic_effort_for_backend(cfg.worker_backend),
             backend=cfg.worker_backend,  # type: ignore[arg-type]
         )
         builder.add_round(proposal, verdict)

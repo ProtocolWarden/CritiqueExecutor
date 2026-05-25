@@ -66,7 +66,16 @@ def test_round_limit_without_accept():
 def test_rejection_reason_threaded_into_next_agent_call():
     seen: list = []
 
-    def fake_agent(goal_text, working_dir, system_prompt="", rejection_reason=None, timeout_seconds=3600):
+    def fake_agent(
+        goal_text,
+        working_dir,
+        model,
+        system_prompt="",
+        rejection_reason=None,
+        timeout_seconds=3600,
+        effort=None,
+        backend="claude_code",
+    ):
         seen.append(rejection_reason)
         return (True, "p")
 
@@ -95,7 +104,16 @@ def test_agent_failure_records_reject_and_continues():
 def test_agent_failure_reason_threaded_as_rejection():
     seen: list = []
 
-    def fake_agent(goal_text, working_dir, system_prompt="", rejection_reason=None, timeout_seconds=3600):
+    def fake_agent(
+        goal_text,
+        working_dir,
+        model,
+        system_prompt="",
+        rejection_reason=None,
+        timeout_seconds=3600,
+        effort=None,
+        backend="claude_code",
+    ):
         seen.append(rejection_reason)
         return (False, "boom")
 
@@ -117,6 +135,16 @@ def test_worker_backend_passed_to_critic():
         patch("critique_executor._loop.run_agent", return_value=(True, "p")),
         patch("critique_executor._loop.run_critic", side_effect=fake_critic),
     ):
-        run_critique_loop(CritiqueTopology.ADVERSARIAL, _config(worker_backend="codex_cli"), "g")
+        run_critique_loop(
+            CritiqueTopology.ADVERSARIAL,
+            _config(
+                worker_backend="codex_cli",
+                critic_backend_models={"codex_cli": "gpt-5.4-mini"},
+                critic_backend_efforts={"codex_cli": "low"},
+            ),
+            "g",
+        )
 
     assert captured[0]["backend"] == "codex_cli"
+    assert captured[0]["critic_model"] == "gpt-5.4-mini"
+    assert captured[0]["effort"] == "low"

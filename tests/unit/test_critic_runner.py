@@ -44,6 +44,7 @@ def test_claude_backend_accept_verdict():
     cmd = m.call_args.args[0]
     assert cmd[0] == "claude"
     assert "--append-system-prompt" in cmd
+    assert "--model" in cmd and cmd[cmd.index("--model") + 1] == "claude-x"
 
 
 def test_claude_backend_reject_verdict():
@@ -111,8 +112,32 @@ def test_codex_backend_uses_codex_command_and_raw_stdout():
         )
 
     assert m.call_args.args[0][0] == "codex"
+    assert "--model" in m.call_args.args[0]
     assert verdict.status == VerdictStatus.ACCEPT
     assert verdict.reason == "fine"
+
+
+def test_effort_forwarded_to_both_backends():
+    with patch(
+        "critique_executor.critic_runner.safe_run",
+        return_value=_result(stdout=_verdict_json("accept", "ok")),
+    ) as m:
+        run_critic(
+            proposal="p", goal_text="g", criteria=[], critic_model="m",
+            critic_system_prompt="", round_num=1, effort="medium",
+        )
+    assert "--effort" in m.call_args.args[0]
+    assert "medium" in m.call_args.args[0]
+
+    with patch(
+        "critique_executor.critic_runner.safe_run",
+        return_value=_result(stdout='{"status": "accept", "reason": "ok"}'),
+    ) as m:
+        run_critic(
+            proposal="p", goal_text="g", criteria=[], critic_model="gpt-5.4",
+            critic_system_prompt="", round_num=1, effort="low", backend="codex_cli",
+        )
+    assert 'model_reasoning_effort="low"' in m.call_args.args[0]
 
 
 def test_claude_timeout_yields_reject_verdict():

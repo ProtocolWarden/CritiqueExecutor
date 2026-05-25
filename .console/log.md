@@ -75,3 +75,10 @@ Branch: feat/p5-revert-to-shim. Staged, not committed.
 ## 2026-05-23 — Standardize pre-push hook (file only)
 
 - Updated `.hooks/pre-push` to the auto-discovering variant. NOT activating core.hooksPath yet: repo has pre-existing audit findings that would block pushes under the fail-closed guard; activate after that cleanup.
+
+## 2026-05-25 — Add backend-aware proposer and critic runtime tiers
+
+- Extended `CritiqueConfig` with backend-specific proposer/critic model and effort mappings.
+- `run_agent` now supports both Claude and Codex command shapes with explicit model/effort.
+- `run_critic` now forwards effort for both backends.
+- Shared loop now resolves proposer/critic runtime from config per backend instead of assuming one Claude-only path. Focused CritiqueExecutor test slices passed.

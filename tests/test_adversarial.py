@@ -96,7 +96,16 @@ def test_rejection_reason_passed_to_next_agent_call():
     config = _make_config()
     calls: list = []
 
-    def fake_agent(goal_text, working_dir, system_prompt="", rejection_reason=None, timeout_seconds=3600):
+    def fake_agent(
+        goal_text,
+        working_dir,
+        model,
+        system_prompt="",
+        rejection_reason=None,
+        timeout_seconds=3600,
+        effort=None,
+        backend="claude_code",
+    ):
         calls.append(rejection_reason)
         return (True, "proposal")
 
@@ -115,7 +124,11 @@ def test_rejection_reason_passed_to_next_agent_call():
 
 
 def test_run_critic_receives_worker_backend():
-    config = _make_config(worker_backend="codex_cli")
+    config = _make_config(
+        worker_backend="codex_cli",
+        critic_backend_models={"codex_cli": "gpt-5.4-mini"},
+        critic_backend_efforts={"codex_cli": "low"},
+    )
     critic_calls: list = []
 
     def fake_critic(**kwargs):
@@ -130,6 +143,8 @@ def test_run_critic_receives_worker_backend():
         loop.run("goal")
 
     assert critic_calls[0]["backend"] == "codex_cli"
+    assert critic_calls[0]["critic_model"] == "gpt-5.4-mini"
+    assert critic_calls[0]["effort"] == "low"
 
 
 def test_agent_failure_counts_as_reject():

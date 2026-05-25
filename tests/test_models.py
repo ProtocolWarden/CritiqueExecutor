@@ -34,6 +34,26 @@ def test_critique_config_at_cap_unchanged():
     assert config.max_rounds == 10
 
 
+def test_critique_config_backend_specific_runtime_selection():
+    config = CritiqueConfig(
+        topology=CritiqueTopology.ADVERSARIAL,
+        proposer_model="claude-sonnet-4-6",
+        critic_model="claude-sonnet-4-6",
+        proposer_effort="medium",
+        critic_effort="medium",
+        proposer_backend_models={"codex_cli": "gpt-5.4"},
+        critic_backend_models={"codex_cli": "gpt-5.4-mini"},
+        proposer_backend_efforts={"codex_cli": "high"},
+        critic_backend_efforts={"codex_cli": "low"},
+    )
+    assert config.proposer_model_for_backend("claude_code") == "claude-sonnet-4-6"
+    assert config.proposer_model_for_backend("codex_cli") == "gpt-5.4"
+    assert config.critic_model_for_backend("codex_cli") == "gpt-5.4-mini"
+    assert config.proposer_effort_for_backend("claude_code") == "medium"
+    assert config.proposer_effort_for_backend("codex_cli") == "high"
+    assert config.critic_effort_for_backend("codex_cli") == "low"
+
+
 def test_critique_trace_to_evidence_dict_counts():
     reject_verdict = CritiqueVerdict(status=VerdictStatus.REJECT, reason="too vague", round=1)
     accept_verdict = CritiqueVerdict(status=VerdictStatus.ACCEPT, reason="good", round=2)
