@@ -1,6 +1,9 @@
 # Contributing to CritiqueExecutor
 
-CritiqueExecutor runs adversarial (proposer+critic) and reflexion (agent+independent critic) critique loops for iterative AI task refinement. The critic always evaluates in isolation — it never sees the proposer/agent identity.
+CritiqueExecutor runs adversarial (draft-agent+critic) and reflexion
+(agent+independent critic) critique loops for iterative AI task refinement.
+The critic always evaluates in isolation — it never sees the draft
+agent/agent identity.
 
 ## Before You Start
 
@@ -29,5 +32,6 @@ Requires Python 3.11+.
 ## Invariants
 
 - **max_rounds**: hard-capped at 10 (enforced in `CritiqueConfig.__post_init__`).
-- Critic isolation: the agent/proposer identity must never reach the critic prompt.
+- Critic isolation: the agent or internal draft-agent identity must never
+  reach the critic prompt.
 - Topology routing: `adversarial` and `reflexion` are the only valid topologies — no fallback.

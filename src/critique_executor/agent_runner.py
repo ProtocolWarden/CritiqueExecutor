@@ -19,7 +19,7 @@ def run_agent(
 ) -> tuple[bool, str]:
     """Run agent subprocess. Returns (success, stdout).
 
-    Adversarial: proposer never sees critic identity or system prompt.
+    Adversarial: the draft agent never sees critic identity or system prompt.
     Only rejection_reason is passed if provided.
     D1: goal_text is the primary --message, not re-framed.
     """

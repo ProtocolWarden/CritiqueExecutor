@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright (C) 2026 ProtocolWarden
-"""Shared propose->critique loop used by the topology classes.
+"""Shared draft->critique loop used by the topology classes.
 
 AdversarialLoop and ReflexionLoop differ only in their declared topology
 and the isolation invariants documented at their boundaries; the round
@@ -25,7 +25,7 @@ def run_critique_loop(
     config: CritiqueConfig,
     goal_text: str,
 ) -> CritiqueTrace:
-    """Drive proposer->critic rounds until accept or round limit.
+    """Drive draft-agent->critic rounds until accept or round limit.
 
     The agent only ever receives the previous rejection reason (never the
     critic's identity or system prompt); the critic is invoked fresh each

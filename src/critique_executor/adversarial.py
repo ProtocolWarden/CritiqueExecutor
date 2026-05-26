@@ -7,10 +7,10 @@ from critique_executor.models import CritiqueConfig, CritiqueTopology, CritiqueT
 
 
 class AdversarialLoop:
-    """Proposer + critic loop. Neither sees the other's system prompt.
+    """Draft-agent + critic loop. Neither sees the other's system prompt.
 
-    Isolation invariant: the proposer and critic are distinct agents and
-    the proposer never learns the critic's identity or system prompt — it
+    Isolation invariant: the draft agent and critic are distinct agents and
+    the draft agent never learns the critic's identity or system prompt — it
     only receives the rejection reason from the prior round.
     """
 

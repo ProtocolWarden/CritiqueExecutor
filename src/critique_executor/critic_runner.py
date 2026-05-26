@@ -40,7 +40,7 @@ def run_critic(
 ) -> CritiqueVerdict:
     """Ask critic to evaluate proposal via CLI subprocess. Returns CritiqueVerdict.
 
-    Critic does NOT know who the proposer is (isolation invariant).
+    Critic does NOT know who the draft agent is (isolation invariant).
     Criteria listed explicitly in prompt.
     Response must be JSON {"status": "accept"|"reject", "reason": "..."}.
     """

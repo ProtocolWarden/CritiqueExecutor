@@ -23,3 +23,5 @@ _(none)_
 - [x] executor.py: CritiqueExecutorRunner routing to RxP RuntimeResult
 - [x] Full test suite (all topologies, mocked)
 - [x] Git initialized, initial commit on main
+- [x] Clarified internal "draft agent" wording in docs/docstrings while
+  keeping `proposer_*` config names stable

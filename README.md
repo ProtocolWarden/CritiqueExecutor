@@ -6,8 +6,8 @@ limit is reached, and reports the outcome as an RxP `RuntimeResult`.
 
 ## What this repo is
 
-- A thin **execution-backend shim**: it drives a proposer agent (a `claude`
-  CLI subprocess) and an independent critic (`claude` or `codex` CLI), looping
+- A thin **execution-backend shim**: it drives an internal draft agent (a CLI
+  subprocess) and an independent critic (`claude` or `codex` CLI), looping
   until the critic returns an `accept` verdict or `max_rounds` is hit.
 - The single entry point is `CritiqueExecutorRunner` (`src/critique_executor/executor.py`),
   which picks `AdversarialLoop` or `ReflexionLoop` and returns an
@@ -59,7 +59,7 @@ AdversarialLoop / ReflexionLoop   (adversarial.py / reflexion.py)
         │  delegate to shared loop
         ▼
 run_critique_loop                 (_loop.py — round mechanics)
-        ├── run_agent             (agent_runner.py — proposer via `claude`)
+        ├── run_agent             (agent_runner.py — draft agent via CLI)
         ├── run_critic            (critic_runner.py — critic via `claude`/`codex`)
         │        └── parse_verdict (verdict.py)
         └── CritiqueTraceBuilder  (trace.py → CritiqueTrace, models.py)
@@ -67,8 +67,11 @@ run_critique_loop                 (_loop.py — round mechanics)
 
 Key invariants:
 
-- **Isolation**: the proposer never sees the critic's identity or system
+- **Isolation**: the draft agent never sees the critic's identity or system
   prompt; it receives only the prior round's rejection reason.
+- **Compatibility**: config fields still use the historical `proposer_*`
+  names, but those fields refer to the internal draft-producing agent inside
+  CritiqueExecutor, not OC's board-facing proposer lane.
 - **Fresh critic context** each round (reflexion); criteria are passed
   explicitly in the prompt.
 - The shared round mechanics live once in `_loop.py`; the topology classes

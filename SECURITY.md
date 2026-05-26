@@ -26,7 +26,8 @@ You will receive an acknowledgment within 72 hours. We aim to release a fix with
 
 CritiqueExecutor runs adversarial and reflexion critique loops for iterative AI task refinement. The primary security surface is:
 
-- **Critic isolation bypass** — anything that exposes proposer/agent identity to the critic prompt
+- **Critic isolation bypass** — anything that exposes the internal draft
+  agent/agent identity to the critic prompt
 - **API token exposure** via config files or logs (`ANTHROPIC_API_KEY`)
 - **Round limit bypass** — circumventing the hard cap of 10 rounds in `CritiqueConfig`
 - **Prompt injection** — untrusted critique content reaching subsequent agent rounds

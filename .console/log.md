@@ -82,3 +82,11 @@ Branch: feat/p5-revert-to-shim. Staged, not committed.
 - `run_agent` now supports both Claude and Codex command shapes with explicit model/effort.
 - `run_critic` now forwards effort for both backends.
 - Shared loop now resolves proposer/critic runtime from config per backend instead of assuming one Claude-only path. Focused CritiqueExecutor test slices passed.
+
+## 2026-05-25 — Clarify internal draft-agent wording
+
+- Updated README, contributing/security docs, and core loop docstrings to use
+  "draft agent" in human-facing prose instead of bare "proposer".
+- Kept `proposer_*` config field names unchanged for compatibility.
+- Added one OC adapter note so the backend-facing `proposer_*` fields are not
+  confused with OC's board-facing proposer subsystem.
