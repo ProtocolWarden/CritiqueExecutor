@@ -3,6 +3,8 @@ src_root: src/critique_executor
 tests_root: tests
 
 audit:
+  # This repo's .console is reconciled + clean (leak-free, log under budget) — enforce R1/R2.
+  reconcile_enforce: true
   cross_repo:
     platform_manifest_repo: ../PlatformManifest
 
